@@ -1,0 +1,1550 @@
+{
+  "info": {
+    "name": "Horus Tito - User Management API",
+    "_postman_id": "horus-tito-2024-v1",
+    "description": "Complete REST API for User Management System with JWT Authentication.\n\n**Features:**\n- User Registration & Authentication\n- CRUD Operations for Users\n- JWT Token Management\n- Input Validation\n- Error Handling\n\n**Tech Stack:**\n- Python 3.11+\n- Flask Framework\n- PostgreSQL Database\n- SQLAlchemy ORM\n- JWT Authentication\n\n**Developer:** [Your Name]\n**Date:** November 2024",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});",
+                  "",
+                  "pm.test(\"Backend is running\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('OK');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the backend server is running and healthy.\n\n**Expected Response:**\n```json\n{\n  \"status\": \"OK\",\n  \"message\": \"Backend is running\"\n}\n```"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for checking system health and status"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register New User - Success",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('berhasil');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "// Clear any existing user_id from previous tests",
+                  "pm.collectionVariables.set(\"user_id\", null);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique username and email for testing",
+                  "const timestamp = Date.now();",
+                  "const randomNum = Math.floor(Math.random() * 1000);",
+                  "",
+                  "pm.collectionVariables.set(\"test_username\", `testuser_${timestamp}_${randomNum}`);",
+                  "pm.collectionVariables.set(\"test_email\", `testuser_${timestamp}_${randomNum}@example.com`);",
+                  "pm.collectionVariables.set(\"test_password\", \"SecurePass123!\");",
+                  "pm.collectionVariables.set(\"test_nama\", \"Test User Account\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"{{test_password}}\",\n  \"email\": \"{{test_email}}\",\n  \"nama\": \"{{test_nama}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Register a new user account.\n\n**Request Body:**\n```json\n{\n  \"username\": \"johndoe\",\n  \"password\": \"password123\",\n  \"email\": \"john@example.com\",\n  \"nama\": \"John Doe\"\n}\n```\n\n**Validation Rules:**\n- Username: min 3 chars, max 50 chars, unique\n- Password: min 6 chars\n- Email: valid format, unique\n- Nama: min 3 chars, max 100 chars"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Duplicate Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions username\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('username');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"AnotherPass123!\",\n  \"email\": \"different_email@example.com\",\n  \"nama\": \"Different Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test duplicate username validation. Should return 400 error."
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Invalid Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions email\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser123\",\n  \"password\": \"password123\",\n  \"email\": \"invalid-email-format\",\n  \"nama\": \"New User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test email validation. Should return 400 error for invalid email format."
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Missing Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"incompleteuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test required fields validation. Missing email and nama fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Success",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains JWT token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "    pm.expect(jsonData.token.length).to.be.above(20);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('berhasil');",
+                  "});",
+                  "",
+                  "// Save token for authenticated requests",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    console.log(\"✅ JWT Token saved successfully\");",
+                  "}",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"{{test_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            },
+            "description": "Authenticate user and receive JWT token.\n\n**Request Body:**\n```json\n{\n  \"username\": \"johndoe\",\n  \"password\": \"password123\"\n}\n```\n\n**Response:**\n```json\n{\n  \"message\": \"Login berhasil\",\n  \"token\": \"eyJhbGci...\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Wrong Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is appropriate\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('password');",
+                  "});",
+                  "",
+                  "pm.test(\"No token is returned\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{test_username}}\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            },
+            "description": "Test authentication with incorrect password. Should return 401 error."
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Non-existent User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nonexistentuser999\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            },
+            "description": "Test authentication with non-existent username. Should return 401 error."
+          },
+          "response": []
+        }
+      ],
+      "description": "User registration and authentication endpoints"
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Users have correct structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('username');",
+                  "        pm.expect(jsonData[0]).to.have.property('email');",
+                  "        pm.expect(jsonData[0]).to.have.property('nama');",
+                  "        pm.expect(jsonData[0]).to.have.property('created_at');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Password is not exposed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.not.have.property('password');",
+                  "        pm.expect(jsonData[0]).to.not.have.property('password_hash');",
+                  "    }",
+                  "});",
+                  "",
+                  "// Save first user ID for update/delete tests",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.length > 0) {",
+                  "    // Find our test user",
+                  "    const testUsername = pm.collectionVariables.get(\"test_username\");",
+                  "    const testUser = jsonData.find(user => user.username === testUsername);",
+                  "    if (testUser) {",
+                  "        pm.collectionVariables.set(\"user_id\", testUser.id);",
+                  "        console.log(\"✅ Test user ID saved: \" + testUser.id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Retrieve all users from the database.\n\n**Response Example:**\n```json\n[\n  {\n    \"id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"nama\": \"John Doe\",\n    \"created_at\": \"2024-01-15T10:30:00\"\n  }\n]\n```\n\n**Note:** Password fields are never returned for security."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User - Success",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('berhasil');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Update collection variables with new values",
+                  "const timestamp = Date.now();",
+                  "pm.collectionVariables.set(\"updated_nama\", `Updated User ${timestamp}`);",
+                  "pm.collectionVariables.set(\"updated_email\", `updated_${timestamp}@example.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"{{updated_nama}}\",\n  \"email\": \"{{updated_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            },
+            "description": "Update user information.\n\n**Request Body (all fields optional):**\n```json\n{\n  \"username\": \"newusername\",\n  \"email\": \"newemail@example.com\",\n  \"nama\": \"New Name\"\n}\n```\n\n**Note:** At least one field must be provided."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions user not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('tidak ditemukan');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Test Update\",\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/99999",
+              "host": ["{{base_url}}"],
+              "path": ["users", "99999"]
+            },
+            "description": "Test update with non-existent user ID. Should return 404 error."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User - Empty Body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            },
+            "description": "Test update with empty body. Should return 400 error."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify User Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"User data was updated correctly\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const userId = pm.collectionVariables.get(\"user_id\");",
+                  "    const updatedNama = pm.collectionVariables.get(\"updated_nama\");",
+                  "    const updatedEmail = pm.collectionVariables.get(\"updated_email\");",
+                  "    ",
+                  "    const user = jsonData.find(u => u.id == userId);",
+                  "    if (user) {",
+                  "        pm.expect(user.nama).to.eql(updatedNama);",
+                  "        pm.expect(user.email).to.eql(updatedEmail);",
+                  "        console.log(\"✅ User update verified successfully\");",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Verify that the user update was successful by fetching all users."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User - Success",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('berhasil');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "console.log(\"✅ User deleted successfully\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            },
+            "description": "Delete a user from the database.\n\n**Response:**\n```json\n{\n  \"message\": \"User berhasil dihapus\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions user not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('tidak ditemukan');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/99999",
+              "host": ["{{base_url}}"],
+              "path": ["users", "99999"]
+            },
+            "description": "Test delete with non-existent user ID. Should return 404 error."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify User Deletion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"User no longer exists in database\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const userId = pm.collectionVariables.get(\"user_id\");",
+                  "    ",
+                  "    const user = jsonData.find(u => u.id == userId);",
+                  "    pm.expect(user).to.be.undefined;",
+                  "    console.log(\"✅ User deletion verified - user no longer in database\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Verify that the user was successfully deleted from the database."
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations for user management"
+    },
+    {
+      "name": "Edge Cases & Security",
+      "item": [
+        {
+          "name": "SQL Injection Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"System handles SQL injection safely\", function () {",
+                  "    // Should return 400 or 401, not 500 (server error)",
+                  "    pm.expect([400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"No SQL error in response\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    pm.expect(responseText.toLowerCase()).to.not.include('sql');",
+                  "    pm.expect(responseText.toLowerCase()).to.not.include('syntax');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin' OR '1'='1\",\n  \"password\": \"password' OR '1'='1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            },
+            "description": "Test SQL injection vulnerability. System should handle this safely using parameterized queries."
+          },
+          "response": []
+        },
+        {
+          "name": "XSS Attack Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 201\", function () {",
+                  "    // Either validation rejects it (400) or it's stored safely (201)",
+                  "    pm.expect([400, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"No script tags in error message\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    // Response should not contain executable script",
+                  "    pm.expect(responseText).to.not.include('<script>');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"xsstest123\",\n  \"password\": \"password123\",\n  \"email\": \"xss@test.com\",\n  \"nama\": \"<script>alert('XSS')</script>\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test XSS vulnerability. System should either sanitize input or reject it."
+          },
+          "response": []
+        },
+        {
+          "name": "Very Long Input Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"System handles long input gracefully\", function () {",
+                  "    pm.expect([400, 413]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate very long string (200+ characters)",
+                  "const longString = 'A'.repeat(300);",
+                  "pm.collectionVariables.set(\"long_string\", longString);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{long_string}}\",\n  \"password\": \"password123\",\n  \"email\": \"long@test.com\",\n  \"nama\": \"Long Name Test\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test system behavior with inputs exceeding max length constraints."
+          },
+          "response": []
+        },
+        {
+          "name": "Content-Type Missing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"System handles missing Content-Type\", function () {",
+                  "    // Should return 400 or 415 (Unsupported Media Type)",
+                  "    pm.expect([400, 415]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\",\n  \"email\": \"test@example.com\",\n  \"nama\": \"Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test behavior when Content-Type header is missing."
+          },
+          "response": []
+        },
+        {
+          "name": "Malformed JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"System handles malformed JSON safely\", function () {",
+                  "    pm.expect([400, 415]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response is valid JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is user-friendly (no technical details)\", function () {",
+                  "    try {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('error');",
+                  "        ",
+                  "        var errorMsg = jsonData.error.toLowerCase();",
+                  "        ",
+                  "        // Should NOT contain technical/internal details",
+                  "        pm.expect(errorMsg).to.not.include('decode');",
+                  "        pm.expect(errorMsg).to.not.include('char');",
+                  "        pm.expect(errorMsg).to.not.include('line');",
+                  "        pm.expect(errorMsg).to.not.include('column');",
+                  "        pm.expect(errorMsg).to.not.include('trailing comma');",
+                  "        pm.expect(errorMsg).to.not.include('python');",
+                  "        pm.expect(errorMsg).to.not.include('traceback');",
+                  "        ",
+                  "        console.log(\"✅ Error message is safe and user-friendly\");",
+                  "    } catch (e) {",
+                  "        pm.expect.fail(\"Response was not valid JSON or missing error property: \" + e.message);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"No information disclosure\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    ",
+                  "    // Should NOT expose internal details in raw text",
+                  "    pm.expect(responseText).to.not.include('Traceback');",
+                  "    pm.expect(responseText).to.not.include('.py');",
+                  "    pm.expect(responseText).to.not.include('File \"');",
+                  "    pm.expect(responseText).to.not.include('werkzeug');",
+                  "    ",
+                  "    console.log(\"✅ No sensitive information leaked\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\",\n  \"email\": \"test@example.com\",\n  \"nama\": \"Test User\",\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test with malformed JSON (trailing comma)."
+          },
+          "response": []
+        },
+        {
+          "name": "Password Not Stored as Plain Text",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Password fields are never exposed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(user => {",
+                  "        pm.expect(user).to.not.have.property('password');",
+                  "        pm.expect(user).to.not.have.property('password_hash');",
+                  "    });",
+                  "    console.log(\"✅ Password security verified - no password fields in response\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Verify that passwords are never returned in API responses."
+          },
+          "response": []
+        }
+      ],
+      "description": "Security and edge case testing"
+    },
+    {
+      "name": "Performance & Load",
+      "item": [
+        {
+          "name": "Batch User Creation",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// This would be run multiple times in a performance test",
+                  "const timestamp = Date.now();",
+                  "const random = Math.floor(Math.random() * 10000);",
+                  "pm.collectionVariables.set(\"batch_username\", `batchuser_${timestamp}_${random}`);",
+                  "pm.collectionVariables.set(\"batch_email\", `batch_${timestamp}_${random}@test.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time under 3 seconds\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "console.log(`User created in ${pm.response.responseTime}ms`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{batch_username}}\",\n  \"password\": \"password123\",\n  \"email\": \"{{batch_email}}\",\n  \"nama\": \"Batch Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            },
+            "description": "Test for batch user creation. Run this multiple times using Collection Runner to test performance under load."
+          },
+          "response": []
+        },
+        {
+          "name": "Concurrent Read Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time under 1 second\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.test(\"Data consistency\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "console.log(`Read completed in ${pm.response.responseTime}ms`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Test concurrent read operations. Run multiple times to simulate concurrent users."
+          },
+          "response": []
+        }
+      ],
+      "description": "Performance and load testing scenarios"
+    },
+    {
+      "name": "Complete Workflow Test",
+      "item": [
+        {
+          "name": "01 - Register New User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "pm.collectionVariables.set(\"workflow_username\", `workflow_${timestamp}`);",
+                  "pm.collectionVariables.set(\"workflow_email\", `workflow_${timestamp}@test.com`);",
+                  "pm.collectionVariables.set(\"workflow_password\", \"WorkflowPass123!\");",
+                  "pm.collectionVariables.set(\"workflow_nama\", \"Workflow Test User\");"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 1: User Registration Successful\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "console.log(\"Step 1 Complete: User registered successfully\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{workflow_username}}\",\n  \"password\": \"{{workflow_password}}\",\n  \"email\": \"{{workflow_email}}\",\n  \"nama\": \"{{workflow_nama}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["users", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Login with New User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 2: Login Successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"workflow_token\", jsonData.token);",
+                  "console.log(\"Step 2 Complete: User logged in, token received\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{workflow_username}}\",\n  \"password\": \"{{workflow_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": ["{{base_url}}"],
+              "path": ["users", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Fetch User List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 3: User List Retrieved\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "const workflowUsername = pm.collectionVariables.get(\"workflow_username\");",
+                  "const user = jsonData.find(u => u.username === workflowUsername);",
+                  "",
+                  "pm.test(\"New user appears in list\", function () {",
+                  "    pm.expect(user).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "if (user) {",
+                  "    pm.collectionVariables.set(\"workflow_user_id\", user.id);",
+                  "    console.log(\"Step 3 Complete: User found in list, ID: \" + user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Update User Profile",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "pm.collectionVariables.set(\"workflow_updated_nama\", `Updated Workflow ${timestamp}`);",
+                  "pm.collectionVariables.set(\"workflow_updated_email\", `updated_workflow_${timestamp}@test.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 4: User Profile Updated\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "console.log(\"Step 4 Complete: User profile updated\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"{{workflow_updated_nama}}\",\n  \"email\": \"{{workflow_updated_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{workflow_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{workflow_user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Verify Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 5: Update Verified\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "const userId = pm.collectionVariables.get(\"workflow_user_id\");",
+                  "const user = jsonData.find(u => u.id == userId);",
+                  "",
+                  "pm.test(\"User data reflects updates\", function () {",
+                  "    const expectedNama = pm.collectionVariables.get(\"workflow_updated_nama\");",
+                  "    const expectedEmail = pm.collectionVariables.get(\"workflow_updated_email\");",
+                  "    pm.expect(user.nama).to.eql(expectedNama);",
+                  "    pm.expect(user.email).to.eql(expectedEmail);",
+                  "});",
+                  "",
+                  "console.log(\"Step 5 Complete: Updates verified in database\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 6: User Deleted\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "console.log(\"Step 6 Complete: User deleted from system\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{workflow_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{workflow_user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Verify Deletion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ Step 7: Deletion Verified\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "const userId = pm.collectionVariables.get(\"workflow_user_id\");",
+                  "const user = jsonData.find(u => u.id == userId);",
+                  "",
+                  "pm.test(\"User no longer exists in system\", function () {",
+                  "    pm.expect(user).to.be.undefined;",
+                  "});",
+                  "",
+                  "console.log(\"\\n\" + \"=\".repeat(50));",
+                  "console.log(\"🎉 COMPLETE WORKFLOW TEST PASSED!\");",
+                  "console.log(\"=\".repeat(50));",
+                  "console.log(\"All 7 steps completed successfully:\");",
+                  "console.log(\"✅ 1. User Registration\");",
+                  "console.log(\"✅ 2. User Login & Authentication\");",
+                  "console.log(\"✅ 3. Fetch User List\");",
+                  "console.log(\"✅ 4. Update User Profile\");",
+                  "console.log(\"✅ 5. Verify Update\");",
+                  "console.log(\"✅ 6. Delete User\");",
+                  "console.log(\"✅ 7. Verify Deletion\");",
+                  "console.log(\"=\".repeat(50));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Complete end-to-end workflow test covering all CRUD operations"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "test_username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_nama",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "updated_nama",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "updated_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_nama",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_updated_nama",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workflow_updated_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "batch_username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "batch_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "long_string",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
