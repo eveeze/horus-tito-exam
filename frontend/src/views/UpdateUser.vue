@@ -27,20 +27,24 @@ const validateEmail = (email) => {
 const fetchUser = async () => {
   loadingData.value = true;
   try {
-    const response = await api.get("/users");
-    const user = response.data.find((u) => u.id === parseInt(userId));
+    // Langsung tembak ID spesifik
+    const response = await api.get(`/users/${userId}`);
+    const user = response.data; // Backend sekarang mengembalikan 1 objek, bukan array
 
-    if (user) {
-      formData.value = {
-        nama: user.nama,
-        email: user.email,
-        username: user.username,
-      };
-    } else {
-      error.value = "User tidak ditemukan";
-    }
+    // Langsung isi form
+    formData.value = {
+      nama: user.nama,
+      email: user.email,
+      username: user.username,
+    };
   } catch (err) {
+    // Tangkap error 404 dari backend
     error.value = err.response?.data?.error || "Gagal memuat data user";
+
+    // Opsional: Jika user tidak ditemukan, kembalikan ke dashboard setelah beberapa detik
+    if (err.response?.status === 404) {
+      setTimeout(() => router.push("/dashboard"), 2000);
+    }
   } finally {
     loadingData.value = false;
   }

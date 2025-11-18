@@ -145,3 +145,16 @@ def delete_user(user_id):
         if 'tidak ditemukan' in str(e):
             return jsonify({'error': str(e)}), 404
         return jsonify({'error': str(e)}), 400
+
+@users_bp.route('/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    """
+    GET /users/<id>
+    Endpoint untuk mendapatkan detail satu user
+    """
+    user = user_service.get_user_by_id(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User tidak ditemukan'}), 404
+        
+    return jsonify(user.to_dict()), 200
