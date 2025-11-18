@@ -25,11 +25,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired atau invalid
+    const status = error.response ? error.response.status : null;
+
+    const isLoginRequest =
+      error.config && error.config.url && error.config.url.includes("/login");
+
+    if ((status === 401 || status === 422) && !isLoginRequest) {
+      console.warn("Sesi tidak valid atau kadaluarsa. Mengarahkan ke login.");
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
+
     return Promise.reject(error);
   }
 );
