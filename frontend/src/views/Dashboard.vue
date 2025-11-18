@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/stores/auth";
 import api from "@/services/api";
 import UserTable from "@/components/UserTable.vue";
 import SearchBar from "@/components/SearchBar.vue";

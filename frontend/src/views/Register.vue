@@ -16,47 +16,40 @@ const error = ref("");
 const success = ref("");
 const loading = ref(false);
 
-const validateEmail = (email) => {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-};
-
-const handleRegister = async () => {
-  error.value = "";
-  success.value = "";
-
-  // Validasi client-side
+const validateForm = () => {
   if (
     !formData.value.nama ||
     !formData.value.email ||
     !formData.value.username ||
     !formData.value.password
   ) {
-    error.value = "Semua field harus diisi";
-    return;
+    return "Semua field wajib diisi";
   }
+  if (formData.value.username.length < 3) return "Username minimal 3 karakter";
+  if (formData.value.password.length < 6) return "Password minimal 6 karakter";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.value.email)) return "Format email tidak valid";
+  return null;
+};
 
-  if (!validateEmail(formData.value.email)) {
-    error.value = "Format email tidak valid";
-    return;
-  }
+const handleRegister = async () => {
+  error.value = "";
+  success.value = "";
 
-  if (formData.value.password.length < 6) {
-    error.value = "Password minimal 6 karakter";
+  const validationError = validateForm();
+  if (validationError) {
+    error.value = validationError;
     return;
   }
 
   loading.value = true;
-
   try {
     const response = await api.post("/users/register", formData.value);
-    success.value = response.data.message;
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 1500);
+    success.value = "Registrasi Berhasil! Mengalihkan ke login...";
+    setTimeout(() => router.push("/login"), 2000);
   } catch (err) {
-    error.value = err.response?.data?.error || "Registrasi gagal";
+    error.value =
+      err.response?.data?.error || "Gagal mendaftar. Silakan coba lagi.";
   } finally {
     loading.value = false;
   }
@@ -65,116 +58,102 @@ const handleRegister = async () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-linear-to-br from-orange-400 to-orange-600 py-12 px-4"
+    class="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-orange-50 to-orange-100 p-4"
   >
-    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-orange-600">Registrasi Akun</h1>
-        <p class="text-gray-600 mt-2">Buat akun baru Anda</p>
-      </div>
+    <div
+      class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-orange-100"
+    >
+      <div class="p-8">
+        <div class="text-center mb-8">
+          <h1 class="text-3xl font-bold text-gray-800">Buat Akun Baru</h1>
+          <p class="text-gray-500 mt-2">
+            Bergabunglah dengan Horus Tito Management
+          </p>
+        </div>
 
-      <form @submit.prevent="handleRegister" class="space-y-4">
-        <div>
-          <label
-            for="nama"
-            class="block text-sm font-medium text-gray-700 mb-2"
+        <form @submit.prevent="handleRegister" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nama Lengkap</label
+            >
+            <input
+              v-model="formData.nama"
+              type="text"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none"
+              placeholder="John Doe"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Email</label
+            >
+            <input
+              v-model="formData.email"
+              type="email"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none"
+              placeholder="nama@email.com"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Username</label
+            >
+            <input
+              v-model="formData.username"
+              type="text"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none"
+              placeholder="johndoe123"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Password</label
+            >
+            <input
+              v-model="formData.password"
+              type="password"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none"
+              placeholder="Minimal 6 karakter"
+            />
+          </div>
+
+          <div
+            v-if="error"
+            class="p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-200"
           >
-            Nama Lengkap
-          </label>
-          <input
-            id="nama"
-            v-model="formData.nama"
-            type="text"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            placeholder="Nama lengkap Anda"
-          />
-        </div>
-
-        <div>
-          <label
-            for="email"
-            class="block text-sm font-medium text-gray-700 mb-2"
+            {{ error }}
+          </div>
+          <div
+            v-if="success"
+            class="p-3 rounded-lg bg-green-50 text-green-600 text-sm border border-green-200"
           >
-            Email
-          </label>
-          <input
-            id="email"
-            v-model="formData.email"
-            type="email"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            placeholder="email@example.com"
-          />
-        </div>
+            {{ success }}
+          </div>
 
-        <div>
-          <label
-            for="username"
-            class="block text-sm font-medium text-gray-700 mb-2"
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-70 flex justify-center"
           >
-            Username
-          </label>
-          <input
-            id="username"
-            v-model="formData.username"
-            type="text"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            placeholder="Username unik"
-          />
-        </div>
+            <span
+              v-if="loading"
+              class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
+            ></span>
+            {{ loading ? "Mendaftarkan..." : "Daftar Sekarang" }}
+          </button>
+        </form>
 
-        <div>
-          <label
-            for="password"
-            class="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            v-model="formData.password"
-            type="password"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            placeholder="Min. 6 karakter"
-          />
-        </div>
-
-        <div
-          v-if="error"
-          class="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"
-        >
-          {{ error }}
-        </div>
-
-        <div
-          v-if="success"
-          class="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm"
-        >
-          {{ success }}
-        </div>
-
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-        >
-          {{ loading ? "Mendaftar..." : "Daftar" }}
-        </button>
-      </form>
-
-      <div class="mt-6 text-center">
-        <p class="text-sm text-gray-600">
+        <div class="mt-6 text-center text-sm text-gray-600">
           Sudah punya akun?
           <router-link
             to="/login"
-            class="text-orange-600 hover:text-orange-700 font-semibold"
+            class="text-orange-600 font-bold hover:underline"
+            >Login disini</router-link
           >
-            Login di sini
-          </router-link>
-        </p>
+        </div>
       </div>
     </div>
   </div>
