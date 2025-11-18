@@ -1,34 +1,35 @@
 # Horus Tito Exam - User Management System
 
-Proyek ini adalah solusi **Fullstack Web Application** untuk Horus Entry Exam. Aplikasi ini menyediakan sistem manajemen pengguna lengkap dengan autentikasi (Login/Register), operasi CRUD, pencarian data, serta proteksi halaman menggunakan JWT.
+Proyek ini adalah solusi **Fullstack Web Application** untuk Horus Entry Exam. Sistem ini menyediakan manajemen pengguna lengkap: autentikasi (Login/Register), CRUD, pencarian data, serta proteksi halaman menggunakan JWT.
 
 ---
 
 ## 🚀 Teknologi yang Digunakan
 
-Aplikasi dibangun dengan arsitektur **Separation of Concerns** (Backend dan Frontend terpisah).
+Aplikasi dibangun dengan arsitektur **Separation of Concerns**, memisahkan Backend dan Frontend secara jelas.
 
 ---
 
 ## 🖥️ Backend (API) — Flask
 
-- **Framework:** Flask (Python) — Application Factory Pattern  
-- **Database:** PostgreSQL  
-- **ORM:** SQLAlchemy  
-- **Auth:** Flask‑JWT‑Extended  
-- **Migration:** Flask‑Migrate (Alembic)  
-- **Testing:** Postman Collection  
+- **Framework:** Flask (Application Factory Pattern)
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy
+- **Auth:** Flask‑JWT‑Extended
+- **Migration:** Flask‑Migrate (Alembic)
+- **Testing:** Postman Collection
+- **Containerization:** Docker & Docker Compose
 
 ---
 
 ## 💻 Frontend (UI) — Vue.js
 
-- **Framework:** Vue.js 3 (Composition API)  
-- **Build Tool:** Vite  
-- **State:** Pinia  
-- **Router:** Vue Router (Dengan Guards)  
-- **Styling:** Tailwind CSS  
-- **HTTP:** Axios dengan Interceptors  
+- **Framework:** Vue.js 3 (Composition API)
+- **Build Tool:** Vite
+- **State Management:** Pinia
+- **Routing:** Vue Router (Dengan Guards)
+- **Styling:** Tailwind CSS
+- **HTTP Client:** Axios (Interceptor Support)
 
 ---
 
@@ -36,53 +37,79 @@ Aplikasi dibangun dengan arsitektur **Separation of Concerns** (Backend dan Fron
 
 ```
 horus-tito-exam/
-├── backend/
+├── backend/               # API & Database Logic
 │   ├── app/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── utils/
 │   ├── migrations/
+│   ├── docker-compose.yml
 │   ├── init_db.py
 │   └── run.py
 │
-├── frontend/
+├── frontend/              # User Interface
 │   ├── src/
-│   │   ├── components/
-│   │   ├── stores/
-│   │   ├── views/
-│   │   └── services/
+│   ├── public/
+│   └── package.json
 │
 └── README.md
 ```
 
 ---
 
-## 🛠️ Cara Menjalankan Aplikasi
+# 🛠️ Cara Menjalankan Aplikasi
 
-Anda bisa menjalankan proyek ini menggunakan **Docker** atau **manual**.
+Anda dapat menjalankan **Backend + Database** dengan Docker, dan **Frontend** secara lokal.
 
 ---
 
-## Opsi 1 — Docker (Direkomendasikan)
+# Opsi 1 — Docker (Backend & DB) + Frontend Lokal  
+**Direkomendasikan** karena tidak perlu instalasi PostgreSQL/Python secara manual.
 
-Pastikan Docker & Docker Compose sudah terinstall.
+---
+
+## 1. Jalankan Backend & Database
+
+Masuk ke folder backend:
 
 ```
+cd backend
 docker-compose up --build
 ```
 
-Akses:  
-- Frontend → http://localhost:5173  
-- Backend → http://localhost:5000  
-- Database → Port 5432  
+Backend berjalan di: **http://localhost:5000**  
+Database berjalan di: **port 5432**
+
+### Inisialisasi Database (pertama kali)
+
+```
+docker-compose exec backend flask db upgrade
+```
+
+Atau alternatif:
+
+```
+docker-compose exec backend python init_db.py
+```
 
 ---
 
-## Opsi 2 — Instalasi Manual
+## 2. Jalankan Frontend
 
-### 1. Persiapan Database  
-Buat database PostgreSQL bernama:
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend berjalan di: **http://localhost:5173**
+
+---
+
+# Opsi 2 — Instalasi Manual (Tanpa Docker)
+
+---
+
+## 1. Persiapan Database
+
+Pastikan PostgreSQL sudah terinstall dan buat database:
 
 ```
 horus_tito_db
@@ -90,31 +117,32 @@ horus_tito_db
 
 ---
 
-### 2. Setup Backend
+## 2. Setup Backend
 
 ```
 cd backend
+
 python -m venv venv
-venv\Scripts\activate    # Windows
-source venv/bin/activate  # Mac/Linux
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
 
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit file .env sesuai kredensial DB
+# Edit konfigurasi database dalam file .env
 
 python init_db.py
-# atau:
-# flask db upgrade
 
 python run.py
 ```
 
-Backend berjalan di: http://localhost:5000
+Backend berjalan di: **http://localhost:5000**
 
 ---
 
-### 3. Setup Frontend
+## 3. Setup Frontend
 
 ```
 cd frontend
@@ -127,51 +155,43 @@ cp .env.example .env
 npm run dev
 ```
 
-Frontend berjalan di: http://localhost:5173
+---
+
+# ✅ Fitur Utama
+
+## Autentikasi
+- Register user baru dengan validasi lengkap
+- Login dengan JWT Token
+- Password di-hash menggunakan `werkzeug.security`
+
+## Manajemen User
+- **Create** — Registrasi akun
+- **Read** — Dashboard user (list/pagination)
+- **Update** — Edit user (nama, email, username)
+- **Delete** — Hapus user dengan konfirmasi
+- **Search** — Pencarian realtime (nama, username, email)
+
+## Proteksi & Keamanan
+- Backend: `@jwt_required`
+- Frontend: Navigation Guard (proteksi Dashboard)
+- Mencegah user menghapus akun sendiri saat sedang login
 
 ---
 
-## ✅ Fitur Utama
+# 🧪 Pengujian API (Postman)
 
-### Autentikasi
-- Register + Validasi  
-- Login + JWT Token  
-- Hashing password (werkzeug.security)
+File berada di:
 
-### Manajemen User
-- CRUD lengkap  
-- Pencarian real-time (nama, username, email)  
-- Edit user dengan pre-filled data  
-- Hapus dengan konfirmasi  
-
-### Proteksi & Keamanan
-- Backend: `@jwt_required`  
-- Frontend: Router Guard  
-- CORS diaktifkan  
-
----
-
-## 🧪 Pengujian API (Postman)
-
-Lokasi file:  
 ```
 backend/horus-tito-backend-api.postman_collection.json
 ```
 
 Cara pakai:
-1. Buka Postman  
-2. Import file di atas  
-3. Jalankan request sesuai kebutuhan  
+1. Buka Postman
+2. Import file tersebut
+3. Jalankan request sesuai kebutuhan
 
 ---
 
-## 📝 Catatan Penting
-
-- Password disimpan dalam bentuk **hash** (bukan plaintext)  
-- Menggunakan **psycopg2-binary** untuk koneksi database  
-- Struktur modular → mudah dikembangkan & scalable  
-
----
-
-## ✨ Dibuat oleh
+# ✨ Dibuat oleh  
 **Tito Zaki Saputro**

@@ -22,7 +22,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: horus_tito_backend
     environment:
@@ -43,7 +43,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend:/app
+      - .:/app
     networks:
       - horus_network
     command: python run.py
